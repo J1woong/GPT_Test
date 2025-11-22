@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>GPT 로고 벽돌깨기</title>
+  <title>GPT 로고 벽돌깨기 (report.html)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -47,23 +47,17 @@
 
 <div class="game-wrapper">
   <canvas id="gameCanvas" width="800" height="900"></canvas>
-  <div class="center-text" id="centerText">gpt_logo.png 로고 불러오는 중...</div>
+  <div class="center-text" id="centerText">GPT 로고 불러오는 중...</div>
 </div>
 
 <script>
-/* =============================
-      캔버스 및 기본 설정
-============================= */
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const centerText = document.getElementById("centerText");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const centerText = document.getElementById('centerText');
 
 let isRunning = false;
 let ballStuck = true;
 
-/* =============================
-      패들 설정
-============================= */
 const ORIGINAL_PADDLE_WIDTH = 110;
 const ENLARGED_PADDLE_WIDTH = 160;
 const PADDLE_HEIGHT = 14;
@@ -71,72 +65,48 @@ const PADDLE_MARGIN_BOTTOM = 40;
 
 let paddleWidth = ORIGINAL_PADDLE_WIDTH;
 let paddleX = (canvas.width - paddleWidth) / 2;
-
 let rightPressed = false;
 let leftPressed = false;
-
 let isPaddleEnlarged = false;
 let paddleEnlargeEndTime = 0;
 
-/* =============================
-      공 설정
-============================= */
 const BALL_RADIUS = 8;
 let balls = [];
 
-/* =============================
-      벽돌(로고 샘플링) 설정
-============================= */
-
-// 그리드 해상도 (값 올리면 벽돌 개수 ↑, 로고 더 부드러워짐)
-const GRID_COLS = 60;
-const GRID_ROWS = 60;
-
-// 벽돌 크기
+const GRID_COLS = 70;
+const GRID_ROWS = 70;
 const BRICK_WIDTH = 10;
 const BRICK_HEIGHT = 6;
 const BRICK_PADDING = 2;
-
-// 상단 쪽으로 올리기
 const BRICK_OFFSET_TOP = 40;
-
-// 나머지는 로고 로딩 후 결정됨
 let BRICK_OFFSET_LEFT = 0;
-let BRICK_COLS = GRID_COLS;
-let BRICK_ROWS = GRID_ROWS;
 
-// 로고에서 추출한 마스크 (true = 벽돌 놓을 자리)
 let brickMask = null;
-
-// 실제 벽돌 데이터
 let bricks = [];
 let bricksRemaining = 0;
 
-/* =============================
-      아이템 설정
-============================= */
 const ITEM_DROP_PROB = 0.2;
 const ITEM_SIZE = 18;
 const ITEM_FALL_SPEED = 2;
 
-const ITEM_PLUS2 = "PLUS2";
-const ITEM_MULT2 = "MULT2";
-const ITEM_PADDLE = "PADDLE";
+const ITEM_PLUS2 = 'PLUS2';
+const ITEM_MULT2 = 'MULT2';
+const ITEM_PADDLE = 'PADDLE';
 
 let items = [];
 
-/* =============================
-      초기화 함수
-============================= */
+// Base64 로고 데이터
+const LOGO_BASE64 = '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';
+
 function initPaddle() {
   paddleX = (canvas.width - paddleWidth) / 2;
 }
 
 function createBall() {
   const speed = 4;
-  const angle = (Math.random() * 0.6 + 0.2) * Math.PI;
+  const angle = (Math.random() * 0.5 + 0.3) * Math.PI;
   return {
-    x: paddleX + paddleWidth / 2,
+    x: paddleX + paddleWidth/2,
     y: canvas.height - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT - BALL_RADIUS,
     dx: speed * Math.cos(angle),
     dy: -Math.abs(speed * Math.sin(angle)),
@@ -149,23 +119,18 @@ function resetBalls() {
   ballStuck = true;
 }
 
-/* =============================
-      로고 이미지 → 벽돌 마스크 생성
-============================= */
 function createBrickMaskFromImage(img) {
-  const off = document.createElement("canvas");
+  const off = document.createElement('canvas');
   off.width = GRID_COLS;
   off.height = GRID_ROWS;
-  const octx = off.getContext("2d");
+  const octx = off.getContext('2d');
 
-  // 로고를 위쪽에 맞춰서 그리드에 맞게 스케일링
   const scale = Math.min(GRID_COLS / img.width, GRID_ROWS / img.height);
   const drawW = img.width * scale;
   const drawH = img.height * scale;
-  const dx = (GRID_COLS - drawW) / 2; // 가운데 정렬
-  const dy = 0; // 위쪽으로 붙이기
+  const dx = (GRID_COLS - drawW) / 2;
+  const dy = 0;
 
-  octx.clearRect(0, 0, GRID_COLS, GRID_ROWS);
   octx.drawImage(img, dx, dy, drawW, drawH);
 
   const data = octx.getImageData(0, 0, GRID_COLS, GRID_ROWS).data;
@@ -176,44 +141,33 @@ function createBrickMaskFromImage(img) {
     for (let x = 0; x < GRID_COLS; x++) {
       const idx = (y * GRID_COLS + x) * 4;
       const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      const a = data[idx + 3];
-
-      const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-
-      // 배경(흰색) 제외, 검은 선 부분만 벽돌로
+      const g = data[idx+1];
+      const b = data[idx+2];
+      const a = data[idx+3];
+      const brightness = 0.299*r + 0.587*g + 0.114*b;
       const isBrick = a > 10 && brightness < 230;
       brickMask[y][x] = isBrick;
     }
   }
 
-  // 가로 위치 가운데 정렬
   const totalWidth = GRID_COLS * (BRICK_WIDTH + BRICK_PADDING);
   BRICK_OFFSET_LEFT = (canvas.width - totalWidth) / 2;
-  BRICK_COLS = GRID_COLS;
-  BRICK_ROWS = GRID_ROWS;
 }
 
-/* =============================
-      벽돌 배열 초기화 (마스크 기반)
-============================= */
 function initBricks() {
   bricks = [];
   bricksRemaining = 0;
 
-  if (!brickMask) return;
-
-  for (let row = 0; row < BRICK_ROWS; row++) {
-    bricks[row] = [];
-    for (let col = 0; col < BRICK_COLS; col++) {
-      if (!brickMask[row][col]) {
-        bricks[row][col] = null;
+  for (let y = 0; y < GRID_ROWS; y++) {
+    bricks[y] = [];
+    for (let x = 0; x < GRID_COLS; x++) {
+      if (!brickMask[y][x]) {
+        bricks[y][x] = null;
         continue;
       }
-      const x = BRICK_OFFSET_LEFT + col * (BRICK_WIDTH + BRICK_PADDING);
-      const y = BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING);
-      bricks[row][col] = { x, y, status: 1 };
+      const bx = BRICK_OFFSET_LEFT + x * (BRICK_WIDTH + BRICK_PADDING);
+      const by = BRICK_OFFSET_TOP + y * (BRICK_HEIGHT + BRICK_PADDING);
+      bricks[y][x] = { x: bx, y: by, status: 1 };
       bricksRemaining++;
     }
   }
@@ -221,46 +175,37 @@ function initBricks() {
 
 function resetGame() {
   paddleWidth = ORIGINAL_PADDLE_WIDTH;
-  isPaddleEnlarged = false;
   items = [];
   initPaddle();
   initBricks();
   resetBalls();
   isRunning = false;
   ballStuck = true;
-  centerText.textContent = "Space 또는 클릭해서 시작";
-  centerText.style.opacity = "1";
+  centerText.textContent = 'Space 또는 클릭해서 시작';
+  centerText.style.opacity = '1';
 }
 
-/* =============================
-      그리기
-============================= */
 function drawPaddle() {
-  ctx.fillStyle = "#39c6ff";
+  ctx.fillStyle = '#39c6ff';
   const y = canvas.height - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT;
   ctx.fillRect(paddleX, y, paddleWidth, PADDLE_HEIGHT);
 }
 
 function drawBalls() {
+  ctx.fillStyle = '#ff2d8d';
   for (const b of balls) {
     ctx.beginPath();
-    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#ff2d8d";
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
     ctx.fill();
-    ctx.closePath();
   }
 }
 
 function drawBricks() {
-  if (!bricks.length) return;
-  for (let r = 0; r < bricks.length; r++) {
-    const row = bricks[r];
-    if (!row) continue;
-    for (let c = 0; c < row.length; c++) {
-      const b = row[c];
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let c = 0; c < GRID_COLS; c++) {
+      const b = bricks[r][c];
       if (!b || b.status === 0) continue;
-
-      ctx.fillStyle = `hsl(${(r + c) * 4}, 70%, 50%)`;
+      ctx.fillStyle = 'hsl(' + ((r+c)*3) + ', 80%, 50%)';
       ctx.fillRect(b.x, b.y, BRICK_WIDTH, BRICK_HEIGHT);
     }
   }
@@ -269,37 +214,30 @@ function drawBricks() {
 function drawItems() {
   for (const it of items) {
     if (!it.active) continue;
-    let color = "#fff", text = "";
-
-    if (it.type === ITEM_PLUS2)  { color = "#ffee00"; text = "+2"; }
-    if (it.type === ITEM_MULT2) { color = "#ff0059"; text = "x2"; }
-    if (it.type === ITEM_PADDLE){ color = "#00aaff"; text = "P";  }
+    let color='#fff', text='';
+    if (it.type===ITEM_PLUS2)  { color='#ffee00'; text='+2'; }
+    if (it.type===ITEM_MULT2) { color='#ff0059'; text='x2'; }
+    if (it.type===ITEM_PADDLE){ color='#00d0ff'; text='P';  }
 
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(it.x, it.y, ITEM_SIZE / 2, 0, Math.PI * 2);
+    ctx.arc(it.x, it.y, ITEM_SIZE/2, 0, Math.PI*2);
     ctx.fill();
-    ctx.closePath();
 
-    ctx.fillStyle = "#000";
-    ctx.font = "10px system-ui";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    ctx.fillStyle='#000';
+    ctx.font = '10px system-ui';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
     ctx.fillText(text, it.x, it.y);
   }
 }
 
-/* =============================
-      아이템 처리
-============================= */
-function maybeDropItem(x, y) {
+function maybeDropItem(x,y) {
   if (Math.random() > ITEM_DROP_PROB) return;
-
   const types = [ITEM_PLUS2, ITEM_MULT2, ITEM_PADDLE];
   items.push({
-    x,
-    y,
-    type: types[Math.floor(Math.random() * types.length)],
+    x,y,
+    type: types[Math.floor(Math.random()*types.length)],
     active: true,
     vy: ITEM_FALL_SPEED
   });
@@ -307,53 +245,42 @@ function maybeDropItem(x, y) {
 
 function updateItems() {
   const paddleTop = canvas.height - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT;
-
   for (const it of items) {
     if (!it.active) continue;
-
     it.y += it.vy;
-
     if (
-      it.y + ITEM_SIZE / 2 >= paddleTop &&
-      it.x >= paddleX &&
-      it.x <= paddleX + paddleWidth
+      it.y + ITEM_SIZE/2 >= paddleTop &&
+      it.x >= paddleX && it.x <= paddleX+paddleWidth
     ) {
       applyItemEffect(it.type);
       it.active = false;
     }
-
-    if (it.y > canvas.height + ITEM_SIZE) it.active = false;
+    if (it.y > canvas.height) it.active=false;
   }
-
-  items = items.filter(i => i.active);
+  items = items.filter(x=>x.active);
 }
 
 function applyItemEffect(type) {
-  if (balls.length === 0) return;
   const base = balls[0];
-
-  if (type === ITEM_PLUS2) {
+  if (!base) return;
+  if (type===ITEM_PLUS2) {
     spawnExtraBalls(base, 2);
-  } else if (type === ITEM_MULT2) {
-    const snapshot = [...balls];
-    for (const b of snapshot) {
-      spawnExtraBalls(b, 1);
-    }
-  } else if (type === ITEM_PADDLE) {
+  } else if (type===ITEM_MULT2) {
+    const copy = [...balls];
+    for (const b of copy) spawnExtraBalls(b,1);
+  } else if (type===ITEM_PADDLE) {
     enlargePaddle();
   }
 }
 
 function spawnExtraBalls(base, count) {
-  const speed = Math.sqrt(base.dx ** 2 + base.dy ** 2);
-  const baseAngle = Math.atan2(base.dy, base.dx);
-  const spread = 10 * Math.PI / 180;
-
-  for (let i = 0; i < count; i++) {
-    const angle = baseAngle + (i === 0 ? -spread : spread);
+  const speed = Math.sqrt(base.dx**2 + base.dy**2);
+  const angle0 = Math.atan2(base.dy, base.dx);
+  const spread = 10 * Math.PI/180;
+  for (let i=0;i<count;i++){
+    const angle = angle0 + (i===0? -spread : spread);
     balls.push({
-      x: base.x,
-      y: base.y,
+      x: base.x, y: base.y,
       dx: speed * Math.cos(angle),
       dy: speed * Math.sin(angle),
       radius: BALL_RADIUS
@@ -361,44 +288,34 @@ function spawnExtraBalls(base, count) {
   }
 }
 
-/* =============================
-      패들 버프
-============================= */
 function enlargePaddle() {
-  const center = paddleX + paddleWidth / 2;
+  const center = paddleX + paddleWidth/2;
   paddleWidth = ENLARGED_PADDLE_WIDTH;
-  paddleX = center - paddleWidth / 2;
-  paddleX = Math.max(0, Math.min(paddleX, canvas.width - paddleWidth));
-
-  isPaddleEnlarged = true;
+  paddleX = center - paddleWidth/2;
   paddleEnlargeEndTime = Date.now() + 5000;
+  isPaddleEnlarged = true;
 }
 
 function updatePaddleEnlarge() {
   if (!isPaddleEnlarged) return;
   if (Date.now() > paddleEnlargeEndTime) {
-    const center = paddleX + paddleWidth / 2;
+    const center = paddleX + paddleWidth/2;
     paddleWidth = ORIGINAL_PADDLE_WIDTH;
-    paddleX = center - paddleWidth / 2;
+    paddleX = center - paddleWidth/2;
     isPaddleEnlarged = false;
   }
 }
 
-/* =============================
-      공 업데이트
-============================= */
 function updateBalls() {
   if (ballStuck) {
     const b = balls[0];
-    b.x = paddleX + paddleWidth / 2;
+    b.x = paddleX + paddleWidth/2;
     b.y = canvas.height - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT - BALL_RADIUS;
     return;
   }
-
   const alive = [];
   for (const ball of balls) {
-    // 벽
-    if (ball.x + ball.dx < ball.radius || ball.x + ball.dx > canvas.width - ball.radius)
+    if (ball.x + ball.dx < ball.radius || ball.x + ball.dx > canvas.width-ball.radius)
       ball.dx *= -1;
     if (ball.y + ball.dy < ball.radius)
       ball.dy *= -1;
@@ -411,40 +328,30 @@ function updateBalls() {
 
     if (ball.y < canvas.height + ball.radius) alive.push(ball);
   }
-
   balls = alive;
-
-  if (balls.length === 0) {
-    gameOver();
-  }
+  if (balls.length === 0) gameOver();
 }
 
 function handlePaddleCollision(ball) {
   const top = canvas.height - PADDLE_MARGIN_BOTTOM - PADDLE_HEIGHT;
   if (
     ball.y + ball.radius >= top &&
-    ball.x >= paddleX &&
-    ball.x <= paddleX + paddleWidth &&
+    ball.x >= paddleX && ball.x <= paddleX+paddleWidth &&
     ball.dy > 0
   ) {
-    const hitPos = (ball.x - (paddleX + paddleWidth / 2)) / (paddleWidth / 2);
-    const angle = hitPos * (75 * Math.PI / 180);
-    const speed = Math.sqrt(ball.dx ** 2 + ball.dy ** 2);
-
+    const hit = (ball.x - (paddleX + paddleWidth/2)) / (paddleWidth/2);
+    const angle = hit * (75 * Math.PI/180);
+    const speed = Math.sqrt(ball.dx**2 + ball.dy**2);
     ball.dx = speed * Math.sin(angle);
     ball.dy = -Math.abs(speed * Math.cos(angle));
   }
 }
 
 function handleBrickCollision(ball) {
-  if (!bricks.length) return;
-  for (let r = 0; r < bricks.length; r++) {
-    const row = bricks[r];
-    if (!row) continue;
-    for (let c = 0; c < row.length; c++) {
-      const b = row[c];
-      if (!b || b.status === 0) continue;
-
+  for (let r=0;r<bricks.length;r++){
+    for (let c=0;c<bricks[r].length;c++){
+      const b = bricks[r][c];
+      if (!b || b.status===0) continue;
       if (
         ball.x > b.x &&
         ball.x < b.x + BRICK_WIDTH &&
@@ -454,13 +361,11 @@ function handleBrickCollision(ball) {
         ball.dy *= -1;
         b.status = 0;
         bricksRemaining--;
-
-        maybeDropItem(b.x + BRICK_WIDTH / 2, b.y);
-
-        if (bricksRemaining <= 0) {
+        maybeDropItem(b.x + BRICK_WIDTH/2, b.y);
+        if (bricksRemaining === 0){
           isRunning = false;
-          centerText.textContent = "GPT 로고 올 클리어! Space / 클릭으로 다시 시작";
-          centerText.style.opacity = "1";
+          centerText.textContent = '🎉 GPT 로고 전체 파괴 성공! Space/클릭으로 다시 시작';
+          centerText.style.opacity = '1';
         }
         return;
       }
@@ -468,107 +373,76 @@ function handleBrickCollision(ball) {
   }
 }
 
-/* =============================
-      메인 루프
-============================= */
 function updatePaddle() {
   if (rightPressed) paddleX += 6;
   if (leftPressed)  paddleX -= 6;
-
-  paddleX = Math.max(0, Math.min(paddleX, canvas.width - paddleWidth));
+  paddleX = Math.max(0, Math.min(paddleX, canvas.width-paddleWidth));
 }
 
 function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   drawBricks();
   drawPaddle();
   drawBalls();
   drawItems();
-
   if (isRunning) {
     updatePaddle();
     updateBalls();
     updateItems();
     updatePaddleEnlarge();
   }
-
   requestAnimationFrame(gameLoop);
 }
 
-/* =============================
-      입력 처리
-============================= */
-document.addEventListener("keydown", e => {
-  if (e.code === "ArrowRight") rightPressed = true;
-  if (e.code === "ArrowLeft")  leftPressed = true;
-  if (e.code === "Space")      startGame();
+document.addEventListener('keydown', e=>{
+  if (e.code==='ArrowRight') rightPressed = true;
+  if (e.code==='ArrowLeft')  leftPressed = true;
+  if (e.code==='Space')      startGame();
 });
-document.addEventListener("keyup", e => {
-  if (e.code === "ArrowRight") rightPressed = false;
-  if (e.code === "ArrowLeft")  leftPressed = false;
+document.addEventListener('keyup', e=>{
+  if (e.code==='ArrowRight') rightPressed = false;
+  if (e.code==='ArrowLeft')  leftPressed = false;
 });
 
-/* 마우스 이동 */
-document.addEventListener("mousemove", e => {
+document.addEventListener('mousemove', e=>{
   const rect = canvas.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const scaleX = canvas.width / rect.width;
-  const canvasX = mouseX * scaleX;
-
-  paddleX = canvasX - paddleWidth / 2;
-  paddleX = Math.max(0, Math.min(paddleX, canvas.width - paddleWidth));
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  paddleX = x - paddleWidth/2;
+  paddleX = Math.max(0, Math.min(paddleX, canvas.width-paddleWidth));
 });
 
-canvas.addEventListener("click", startGame);
-centerText.addEventListener("click", startGame);
+canvas.addEventListener('click', startGame);
+centerText.addEventListener('click', startGame);
 
 function startGame() {
-  // 클리어 후 다시 시작
-  if (!isRunning && bricksRemaining <= 0) {
-    resetGame();
-  }
-  // 게임 오버 후 다시 시작
-  if (!isRunning && balls.length === 0) {
-    resetGame();
-  }
+  if (!isRunning && bricksRemaining === 0) resetGame();
+  if (!isRunning && balls.length === 0) resetGame();
   ballStuck = false;
   isRunning = true;
-  centerText.style.opacity = "0";
+  centerText.style.opacity = '0';
 }
 
 function gameOver() {
   isRunning = false;
-  centerText.textContent = "게임 오버! Space / 클릭으로 재시작";
-  centerText.style.opacity = "1";
-  // 공은 비워둔다. startGame에서 resetGame 호출.
   balls = [];
+  centerText.textContent = '💀 게임 오버! Space/클릭으로 재시작';
+  centerText.style.opacity = '1';
 }
 
-/* =============================
-      로고 이미지 로드 후 게임 시작
-============================= */
-function loadLogoAndStart() {
+function loadLogo() {
   const img = new Image();
-  img.src = "gpt_logo.png"; // 같은 폴더에 이 이름으로 저장해두기
-
+  img.src = 'data:image/png;base64,' + LOGO_BASE64;
   img.onload = () => {
     createBrickMaskFromImage(img);
     resetGame();
-    centerText.textContent = "Space 또는 클릭해서 시작";
     gameLoop();
   };
-
   img.onerror = () => {
-    centerText.textContent =
-      "gpt_logo.png 로고를 같은 폴더에 넣어야 합니다.";
-    console.error("gpt_logo.png 파일을 찾을 수 없습니다.");
-    // 그래도 게임 루프는 돌려둠 (벽돌 없이)
-    gameLoop();
+    centerText.textContent = '로고 로딩 오류!';
   };
 }
 
-loadLogoAndStart();
+loadLogo();
 </script>
 
 </body>
